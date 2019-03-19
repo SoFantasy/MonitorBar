@@ -50,7 +50,7 @@ bool CMemoryUsage::Init()
 const std::basic_string<TCHAR> CMemoryUsage::ToString( )const
 {
 	std::basic_ostringstream<TCHAR> ret;
-	ret << _T("内存使用率:") << std::setw(6) << m_dwCur << _T("％");
+	ret << _T("RAM ") << std::setw(5) << m_dwCur << _T(" %");
 	return ret.str( );
 }
 

@@ -23,8 +23,8 @@ CCpuUsage::~CCpuUsage( )
 const std::basic_string<TCHAR> CCpuUsage::ToString( )const
 {
 	std::basic_ostringstream<TCHAR> oss;
-	oss << _T("C P U 使用率:") << std::setw(6) << std::setprecision(2)
-		<< std::fixed << m_dCur << _T("％");
+	oss << _T("CPU ") << std::setw(5) << std::setprecision(2)
+		<< std::fixed << m_dCur << _T(" %");
 	return oss.str( );
 }
 

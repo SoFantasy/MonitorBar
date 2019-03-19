@@ -18,20 +18,20 @@ extern HINSTANCE g_hInst;
 extern ULONG g_lDllRef;
 STDAPI DllShowMonitorBar(BOOL fShowOrHide);
 
-CDeskBand::CDeskBand( )
-:m_lRef(1)
-, m_hWnd(nullptr)
-, m_hWndParent(nullptr)
-, m_dwBandID(0)
-, m_bCanCompositionEnabled(FALSE)
-, m_bIsDirty(FALSE)
-, m_pSite(nullptr)
-, m_bHasFocus(FALSE)
-, m_hFont(nullptr)
-, m_bIsRegisterClassed(false)
-, m_hToolTip(nullptr)
-, nTIMER_ID(1)
-, m_hMenu(nullptr)
+CDeskBand::CDeskBand()
+	:m_lRef(1)
+	, m_hWnd(nullptr)
+	, m_hWndParent(nullptr)
+	, m_dwBandID(0)
+	, m_bCanCompositionEnabled(FALSE)
+	, m_bIsDirty(FALSE)
+	, m_pSite(nullptr)
+	, m_bHasFocus(FALSE)
+	, m_hFont(nullptr)
+	, m_bIsRegisterClassed(false)
+	, m_hToolTip(nullptr)
+	, nTIMER_ID(1)
+	, m_hMenu(nullptr)
 {
 	for (size_t i = 0; i < _countof(m_iMonitors); ++i)
 		__Init(i);
@@ -43,10 +43,10 @@ CDeskBand::CDeskBand( )
 #endif
 }
 
-CDeskBand::~CDeskBand( )
+CDeskBand::~CDeskBand()
 {
 	if (m_pSite)
-		m_pSite->Release( );
+		m_pSite->Release();
 	for (auto& m : m_iMonitors)
 		if (m)
 		{
@@ -67,11 +67,11 @@ void CDeskBand::__Init(size_t i)
 {
 	switch (i)
 	{
-	case 0:m_iMonitors[i] = new CCpuUsage( ); break;
-	case 1:m_iMonitors[i] = new CMemoryUsage( ); break;
-	case 2:m_iMonitors[i] = new CCpuTemperature( ); break;
+	case 0:m_iMonitors[i] = new CCpuUsage(); break;
+	case 1:m_iMonitors[i] = new CMemoryUsage(); break;
+	case 2:m_iMonitors[i] = new CCpuTemperature(); break;
 	}
-	if (!m_iMonitors[i]->Init( ))
+	if (!m_iMonitors[i]->Init())
 	{
 		delete m_iMonitors[i];
 		m_iMonitors[i] = nullptr;
@@ -95,12 +95,12 @@ STDMETHODIMP CDeskBand::QueryInterface(REFIID riid, void** ppv)
 	return QISearch(this, qitab, riid, ppv);
 }
 
-STDMETHODIMP_(ULONG) CDeskBand::AddRef( )
+STDMETHODIMP_(ULONG) CDeskBand::AddRef()
 {
 	return InterlockedIncrement(&m_lRef);
 }
 
-STDMETHODIMP_(ULONG) CDeskBand::Release( )
+STDMETHODIMP_(ULONG) CDeskBand::Release()
 {
 	auto l = InterlockedDecrement(&m_lRef);
 	if (!l) delete this;
@@ -140,7 +140,7 @@ STDMETHODIMP CDeskBand::GetBandInfo(DWORD dwBandID, DWORD, DESKBANDINFO *pdbi)
 		m_dwBandID = dwBandID;
 		if (pdbi->dwMask & DBIM_MINSIZE)
 		{
-			pdbi->ptMinSize.x = 150;
+			pdbi->ptMinSize.x = 80;
 			pdbi->ptMinSize.y = 30;
 		}
 		if (pdbi->dwMask & DBIM_MAXSIZE)
@@ -150,7 +150,7 @@ STDMETHODIMP CDeskBand::GetBandInfo(DWORD dwBandID, DWORD, DESKBANDINFO *pdbi)
 
 		if (pdbi->dwMask & DBIM_ACTUAL)
 		{
-			pdbi->ptActual.x = 150;
+			pdbi->ptActual.x = 80;
 			pdbi->ptActual.y = 30;
 		}
 		if (pdbi->dwMask & DBIM_TITLE)
@@ -190,7 +190,7 @@ STDMETHODIMP CDeskBand::GetClassID(CLSID *pclsid)
 	return S_OK;
 }
 
-STDMETHODIMP CDeskBand::IsDirty( )
+STDMETHODIMP CDeskBand::IsDirty()
 {
 	return m_bIsDirty ? S_OK : S_FALSE;
 }
@@ -204,13 +204,13 @@ STDMETHODIMP CDeskBand::Save(IStream *, BOOL fClearDirty)
 
 STDMETHODIMP CDeskBand::SetSite(IUnknown *pUnkSite)
 {
-	if (m_pSite)m_pSite->Release( );
+	if (m_pSite)m_pSite->Release();
 	if (!pUnkSite)return S_OK;
 	HRESULT hr = S_OK;
 	do
 	{
 		IOleWindow *pow;
-		hr = pUnkSite->QueryInterface(IID_IOleWindow, reinterpret_cast<void **>( &pow ));
+		hr = pUnkSite->QueryInterface(IID_IOleWindow, reinterpret_cast<void **>(&pow));
 		if (FAILED(hr)) break;
 		m_hWndParent = nullptr;
 		hr = pow->GetWindow(&m_hWndParent);
@@ -218,19 +218,19 @@ STDMETHODIMP CDeskBand::SetSite(IUnknown *pUnkSite)
 		WNDCLASS wc =
 		{
 			CS_HREDRAW | CS_VREDRAW, __WndProc, 0, 0, g_hInst, nullptr,
-			LoadCursor(nullptr, IDC_ARROW), ( HBRUSH )::GetStockObject(BLACK_BRUSH),
+			LoadCursor(nullptr, IDC_ARROW), (HBRUSH)::GetStockObject(BLACK_BRUSH),
 			nullptr, sm_lpszClassName
 		};
 		hr = E_FAIL;
 		if (!RegisterClass(&wc))break;
 		m_bIsRegisterClassed = true;
 		m_hWnd = CreateWindow(sm_lpszClassName, nullptr,
-							  WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
-							  0, 0, 0, 0, m_hWndParent, nullptr, g_hInst, this);
+			WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
+			0, 0, 0, 0, m_hWndParent, nullptr, g_hInst, this);
 		if (!m_hWnd)break;
-		pow->Release( );
+		pow->Release();
 		hr = pUnkSite->QueryInterface(IID_IInputObjectSite,
-									  reinterpret_cast<void **>( &m_pSite ));
+			reinterpret_cast<void **>(&m_pSite));
 	} while (false);
 	return hr;
 }
@@ -254,7 +254,7 @@ STDMETHODIMP CDeskBand::UIActivateIO(BOOL fActivate, MSG *)
 	return S_OK;
 }
 
-STDMETHODIMP CDeskBand::HasFocusIO( )
+STDMETHODIMP CDeskBand::HasFocusIO()
 {
 	return m_bHasFocus ? S_OK : S_FALSE;
 }
@@ -264,9 +264,9 @@ LRESULT CALLBACK CDeskBand::__WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
 	static CDeskBand* pDeskBand = nullptr;
 	if (WM_NCCREATE == uMsg)
 	{
-		LPCREATESTRUCT lp = reinterpret_cast<LPCREATESTRUCT>( lParam );
+		LPCREATESTRUCT lp = reinterpret_cast<LPCREATESTRUCT>(lParam);
 		if (lp)
-			pDeskBand = static_cast<CDeskBand*>( lp->lpCreateParams );
+			pDeskBand = static_cast<CDeskBand*>(lp->lpCreateParams);
 	}
 	else if (pDeskBand)
 	{
@@ -276,7 +276,7 @@ LRESULT CALLBACK CDeskBand::__WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
 		case WM_SETFOCUS:return pDeskBand->__OnFocus(TRUE);
 		case WM_KILLFOCUS:return pDeskBand->__OnFocus(FALSE);
 		case WM_PAINT:return pDeskBand->__OnPaint(hWnd);
-		case WM_PRINTCLIENT:return pDeskBand->__OnPaint(hWnd, reinterpret_cast<HDC>( wParam ));
+		case WM_PRINTCLIENT:return pDeskBand->__OnPaint(hWnd, reinterpret_cast<HDC>(wParam));
 		case WM_ERASEBKGND:if (!pDeskBand->m_bCanCompositionEnabled)break; return 1;
 		case WM_DESTROY:return pDeskBand->__OnDestroy(hWnd);
 		case WM_TIMER:if (wParam != pDeskBand->nTIMER_ID)break; return pDeskBand->__OnTimer(hWnd);
@@ -284,7 +284,7 @@ LRESULT CALLBACK CDeskBand::__WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
 		case WM_COMMAND:
 			switch (LOWORD(wParam))
 			{
-			case ID_RESET: return pDeskBand->__OnMenuReset( );
+			case ID_RESET: return pDeskBand->__OnMenuReset();
 			case ID_CLOSE: return pDeskBand->__OnMenuClose(hWnd);
 			}
 			break;
@@ -295,19 +295,19 @@ LRESULT CALLBACK CDeskBand::__WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
 
 LRESULT CDeskBand::__OnCreate(HWND hWnd)
 {
-	SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>( this ));
+	SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
 	HDC hdc = GetDC(hWnd);
-	m_hFont = CreateFont(-MulDiv(8, GetDeviceCaps(hdc, LOGPIXELSY), 72), 0,
-						 0, 0, FW_BOLD, FALSE, FALSE, FALSE, OEM_CHARSET,
-						 OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
-						 DEFAULT_PITCH | FF_DONTCARE, TEXT("Segoe UI Symbol"));
+	m_hFont = CreateFont(-MulDiv(8, GetDeviceCaps(hdc, LOGPIXELSY), 72), 6,
+		0, 0, FW_NORMAL, FALSE, FALSE, FALSE, OEM_CHARSET,
+		OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
+		DEFAULT_PITCH | FF_DONTCARE, TEXT("Consolas"));
 	ReleaseDC(hWnd, hdc);
 	m_hToolTip = CreateWindowEx(WS_EX_TOPMOST, TOOLTIPS_CLASS, nullptr,
-								WS_POPUP | TTS_ALWAYSTIP | TTS_BALLOON | TTS_NOPREFIX,
-								CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-								hWnd, nullptr, g_hInst, nullptr);
+		WS_POPUP | TTS_ALWAYSTIP | TTS_BALLOON | TTS_NOPREFIX,
+		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+		hWnd, nullptr, g_hInst, nullptr);
 	SetWindowPos(m_hToolTip, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
-	TOOLINFO ti = { sizeof( TOOLINFO ), TTF_SUBCLASS | TTF_IDISHWND, m_hWndParent, (UINT_PTR)hWnd };
+	TOOLINFO ti = { sizeof(TOOLINFO), TTF_SUBCLASS | TTF_IDISHWND, m_hWndParent, (UINT_PTR)hWnd };
 	ti.hinst = g_hInst;
 	ti.lpszText = TEXT("");
 	GetClientRect(hWnd, &ti.rect);
@@ -338,7 +338,7 @@ LRESULT CDeskBand::__OnPaint(HWND hWnd, HDC _hdc)
 				HDC hdcPaint = nullptr;
 				HPAINTBUFFER hBufferPaint =
 					BeginBufferedPaint(hdc, &rc,
-					BP_BUFFERFORMAT::BPBF_TOPDOWNDIB, nullptr, &hdcPaint);
+						BP_BUFFERFORMAT::BPBF_TOPDOWNDIB, nullptr, &hdcPaint);
 				DrawThemeParentBackground(hWnd, hdcPaint, &rc);
 				EndBufferedPaint(hBufferPaint, TRUE);
 				CloseThemeData(hTheme);
@@ -346,53 +346,66 @@ LRESULT CDeskBand::__OnPaint(HWND hWnd, HDC _hdc)
 			int nOldBkMode = ::SetBkMode(hdc, TRANSPARENT);
 			HGLOBAL hOldFont = nullptr;
 			if (m_hFont) hOldFont = ::SelectObject(hdc, m_hFont);
-			RECT rcRect = { rc.left, rc.top, 0, rc.top + ( rc.bottom - rc.top ) / _countof(m_iMonitors) };
+			rc.top += 1;
+			RECT rcRect = { rc.left, rc.top, 0, rc.top + (rc.bottom - rc.top) / _countof(m_iMonitors) };
 			SIZE sz[_countof(m_iMonitors)] = { 0 };
 			LONG lWidth = 0;
 			std::wstring sout;
 			for (size_t i = 0; i < _countof(m_iMonitors); i++)
 			{
 				if (!m_iMonitors[i])continue;
-				const auto& str = m_iMonitors[i]->ToString( );
-				GetTextExtentPoint(hdc, str.c_str( ), (int)str.length( ), sz + i);
-				if (sz[i].cx>lWidth)lWidth = sz[i].cx;
+				const auto& str = m_iMonitors[i]->ToString();
+				GetTextExtentPoint(hdc, str.c_str(), (int)str.length(), sz + i);
+				if (sz[i].cx > lWidth)lWidth = sz[i].cx;
 			}
 			for (size_t i = 0; i < _countof(m_iMonitors); i++)
 			{
 				if (!m_iMonitors[i])
 				{
-					rcRect.top = rcRect.bottom;
-					rcRect.bottom = rc.top + (LONG)( ( rc.bottom - rc.top ) * ( i + 2 ) / _countof(m_iMonitors) );
+					//rcRect.top = rcRect.bottom;
+					//rcRect.bottom = rc.top + (LONG)( ( rc.bottom - rc.top ) * ( i + 2 ) / _countof(m_iMonitors) );
+					//rcRect.bottom = rc.top + (LONG)((rc.bottom - rc.top) * (i + 2) / _countof(m_iMonitors));
+					//rcRect.top = rcRect.bottom - 1;
 					continue;
 				}
 #pragma region Draw white rectangle
-				rcRect.right = rc.left + (LONG)( ( rc.right - rc.left )*m_iMonitors[i]->GetValue( ) / 100.0 );
-				FillRect(hdc, &rcRect, ( HBRUSH )::GetStockObject(WHITE_BRUSH));
-				rcRect.top = rcRect.bottom;
-				rcRect.bottom = rc.top + (LONG)( ( rc.bottom - rc.top ) * ( i + 2 ) / _countof(m_iMonitors) );
+				if (i < 2)
+				{
+					rcRect.left = rc.left;
+					rcRect.right = rc.left + (LONG)((rc.right - rc.left)*m_iMonitors[i]->GetValue() / 100.0);
+					rcRect.bottom = rc.top + (LONG)((rc.bottom - rc.top) * (i + 1) / _countof(m_iMonitors)) + 1;
+					rcRect.top = rcRect.bottom - 1;
+					FillRect(hdc, &rcRect, CreateSolidBrush(RGB(255, 0, 0)));//( HBRUSH )::GetStockObject(WHITE_BRUSH)
+					rcRect.left = rcRect.right;
+					rcRect.right = rc.right;
+					FillRect(hdc, &rcRect, CreateSolidBrush(RGB(0, 255, 0)));//( HBRUSH )::GetStockObject(WHITE_BRUSH)
+					//rcRect.top = rcRect.bottom;
+					//rcRect.bottom = rc.top + (LONG)( ( rc.bottom - rc.top ) * ( i + 2 ) / _countof(m_iMonitors) );
+				}
 #pragma endregion
 #pragma region Draw Text
-				const auto &str = m_iMonitors[i]->ToString( );
-				sout += __ChangeString(m_iMonitors[i]->ToLongString( )) + L"\n";
+				const auto &str = m_iMonitors[i]->ToString();
+				sout += __ChangeString(m_iMonitors[i]->ToLongString()) + L"\n";
 				RECT rcText =
 				{
 					0,
-					rc.top + (LONG)( ( i << 1 ) + 1 )* ( rc.bottom - rc.top ) / 6 - ( sz[i].cy >> 1 ),
-					( rc.left + rc.right + lWidth ) >> 1
+					rc.top + (LONG)((i << 1) + 1)* (rc.bottom - rc.top) / 6 - (sz[i].cy >> 1),
+					(rc.left + rc.right + lWidth) >> 1
 				};
+				rcText.top += i;
 				rcText.left = rcText.right - sz[i].cx;
 				rcText.bottom = rcText.top + sz[i].cy;
 				SetTextColor(hdc, RGB(255, 255, 255));
-				DrawText(hdc, str.c_str( ), (int)str.length( ), &rcText, 0);
+				DrawText(hdc, str.c_str(), (int)str.length(), &rcText, 0);
 
-				rcText.right = rcRect.right;
-				SetTextColor(hdc, 0);
-				DrawText(hdc, str.c_str( ), (int)str.length( ), &rcText, 0);
+				//rcText.right = rcRect.right;
+				//SetTextColor(hdc, 0);
+				//DrawText(hdc, str.c_str(), (int)str.length(), &rcText, 0);
 #pragma endregion
 			}
-			TOOLINFOW ti = { sizeof( TOOLINFOW ), 0, m_hWndParent, (UINT_PTR)hWnd };
+			TOOLINFOW ti = { sizeof(TOOLINFOW), 0, m_hWndParent, (UINT_PTR)hWnd };
 			ti.hinst = g_hInst;
-			ti.lpszText = (LPWSTR)sout.c_str( );
+			ti.lpszText = (LPWSTR)sout.c_str();
 			SendMessageW(m_hToolTip, TTM_UPDATETIPTEXTW, 0, (LPARAM)&ti);
 			if (m_hFont) ::SelectObject(hdc, hOldFont);
 			::SetBkMode(hdc, nOldBkMode);
@@ -407,7 +420,7 @@ LRESULT CDeskBand::__OnFocus(BOOL fFocus)
 {
 	m_bHasFocus = fFocus;
 	if (m_pSite)
-		m_pSite->OnFocusChangeIS(dynamic_cast<IOleWindow*>( this ), m_bHasFocus);
+		m_pSite->OnFocusChangeIS(dynamic_cast<IOleWindow*>(this), m_bHasFocus);
 	return 0;
 }
 
@@ -434,7 +447,7 @@ LRESULT CDeskBand::__OnTimer(HWND hWnd)
 		if (!m_iMonitors[i])
 			__Init(i);
 		else
-			m_iMonitors[i]->Update( );
+			m_iMonitors[i]->Update();
 	}
 	HDC hdc = GetDC(hWnd);
 	__OnPaint(hWnd, hdc);
@@ -455,11 +468,11 @@ LRESULT CDeskBand::__OnRButtonUp(HWND hWnd)
 	return 0;
 }
 
-LRESULT CDeskBand::__OnMenuReset( )
+LRESULT CDeskBand::__OnMenuReset()
 {
 	for (auto& m : m_iMonitors)
 		if (m)
-			m->Reset( );
+			m->Reset();
 	return 0;
 }
 
@@ -479,5 +492,5 @@ const std::wstring CDeskBand::__ChangeString(const std::wstring& str)const
 		else
 			ret << s;
 	}
-	return ret.str( );
+	return ret.str();
 }
