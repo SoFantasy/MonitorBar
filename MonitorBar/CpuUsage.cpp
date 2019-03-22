@@ -5,7 +5,7 @@
 #include"Log.h"
 
 CCpuUsage::CCpuUsage( )
-:m_dMax(-1)
+:m_dMax(0)
 , m_dMin(101)
 , m_dCur(0)
 , dwNUMBER_OF_PROCESSORS(__GetCpuConut( ))
@@ -23,8 +23,12 @@ CCpuUsage::~CCpuUsage( )
 const std::basic_string<TCHAR> CCpuUsage::ToString( )const
 {
 	std::basic_ostringstream<TCHAR> oss;
-	oss << _T("CPU ") << std::setw(5) << std::setprecision(2)
-		<< std::fixed << m_dCur << _T(" %");
+	oss << _T("CPU ")
+		<< std::setw(3)
+		//<< std::setprecision(1)
+		//<< std::fixed
+		<< m_dCur
+		<< _T(" %");
 	return oss.str( );
 }
 
@@ -181,7 +185,7 @@ void CCpuUsage::__LoopForProcesses( )
 
 void CCpuUsage::Reset( )
 {
-	m_dMax = -1;
+	m_dMax = 0;
 	m_dMin = 101;
 	m_dCur = 0;
 	m_ullLastTime = 0;

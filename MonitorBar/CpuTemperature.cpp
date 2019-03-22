@@ -73,7 +73,10 @@ const std::basic_string<TCHAR> CCpuTemperature::ToString( )const
 {
 	std::basic_ostringstream<TCHAR> ret;
 	if (m_pCpuTemp)
-		ret << _T("TEP ") << std::setw(5) << m_pCpuTemp->GetValue( ) << _T("℃");
+		ret << _T("TEMP ") 
+		<< std::setw(3) 
+		<< m_pCpuTemp->GetValue( ) 
+		<< _T("°");//℃
 	return ret.str( );
 }
 

@@ -31,7 +31,7 @@ private:
 	void __LoopForProcesses();
 	const DWORD __GetCpuConut( )const;
 private:
-	double m_dMax, m_dMin, m_dCur;
+	DWORD m_dMax, m_dMin, m_dCur;
 	const DWORD dwNUMBER_OF_PROCESSORS;
 	unsigned long long m_ullLastTime, m_ullLastIdleTime;
 	std::map<DWORD, PROCESS_INFO> m_mapProcessMap;

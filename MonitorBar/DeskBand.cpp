@@ -140,7 +140,7 @@ STDMETHODIMP CDeskBand::GetBandInfo(DWORD dwBandID, DWORD, DESKBANDINFO *pdbi)
 		m_dwBandID = dwBandID;
 		if (pdbi->dwMask & DBIM_MINSIZE)
 		{
-			pdbi->ptMinSize.x = 80;
+			pdbi->ptMinSize.x = 70;
 			pdbi->ptMinSize.y = 30;
 		}
 		if (pdbi->dwMask & DBIM_MAXSIZE)
@@ -150,7 +150,7 @@ STDMETHODIMP CDeskBand::GetBandInfo(DWORD dwBandID, DWORD, DESKBANDINFO *pdbi)
 
 		if (pdbi->dwMask & DBIM_ACTUAL)
 		{
-			pdbi->ptActual.x = 80;
+			pdbi->ptActual.x = 70;
 			pdbi->ptActual.y = 30;
 		}
 		if (pdbi->dwMask & DBIM_TITLE)
@@ -299,8 +299,8 @@ LRESULT CDeskBand::__OnCreate(HWND hWnd)
 	HDC hdc = GetDC(hWnd);
 	m_hFont = CreateFont(-MulDiv(8, GetDeviceCaps(hdc, LOGPIXELSY), 72), 6,
 		0, 0, FW_NORMAL, FALSE, FALSE, FALSE, OEM_CHARSET,
-		OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
-		DEFAULT_PITCH | FF_DONTCARE, TEXT("Consolas"));
+		OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY,
+		DEFAULT_PITCH | FF_DONTCARE, TEXT("Consolas UI"));
 	ReleaseDC(hWnd, hdc);
 	m_hToolTip = CreateWindowEx(WS_EX_TOPMOST, TOOLTIPS_CLASS, nullptr,
 		WS_POPUP | TTS_ALWAYSTIP | TTS_BALLOON | TTS_NOPREFIX,
@@ -314,6 +314,8 @@ LRESULT CDeskBand::__OnCreate(HWND hWnd)
 	SendMessage(m_hToolTip, TTM_ADDTOOL, 0, (LPARAM)&ti);
 	SendMessage(m_hToolTip, TTM_SETTITLE, TTI_NONE, (LPARAM)TEXT("详细信息"));
 	SendMessage(m_hToolTip, TTM_SETMAXTIPWIDTH, 0, SHRT_MAX);
+	SendMessage(m_hToolTip, TTM_SETDELAYTIME, TTDT_AUTOPOP, 10000);
+	//SendMessage(m_hToolTip, TTM_SETDELAYTIME, TTDT_INITIAL, 1000);
 	m_hMenu = LoadMenu(g_hInst, MAKEINTRESOURCE(IDR_MENU_MAIN));
 	SetTimer(hWnd, nTIMER_ID, 1000, nullptr);
 	return 0;
@@ -328,6 +330,7 @@ LRESULT CDeskBand::__OnPaint(HWND hWnd, HDC _hdc)
 		hdc = BeginPaint(hWnd, &paint);
 	else
 		GetClientRect(hWnd, &rc);
+
 	if (hdc)
 	{
 		if (m_bCanCompositionEnabled)
@@ -362,10 +365,8 @@ LRESULT CDeskBand::__OnPaint(HWND hWnd, HDC _hdc)
 			{
 				if (!m_iMonitors[i])
 				{
-					//rcRect.top = rcRect.bottom;
-					//rcRect.bottom = rc.top + (LONG)( ( rc.bottom - rc.top ) * ( i + 2 ) / _countof(m_iMonitors) );
-					//rcRect.bottom = rc.top + (LONG)((rc.bottom - rc.top) * (i + 2) / _countof(m_iMonitors));
-					//rcRect.top = rcRect.bottom - 1;
+					rcRect.top = rcRect.bottom;
+					rcRect.bottom = rc.top + (LONG)( ( rc.bottom - rc.top ) * ( i + 2 ) / _countof(m_iMonitors) );
 					continue;
 				}
 #pragma region Draw white rectangle
@@ -379,8 +380,6 @@ LRESULT CDeskBand::__OnPaint(HWND hWnd, HDC _hdc)
 					rcRect.left = rcRect.right;
 					rcRect.right = rc.right;
 					FillRect(hdc, &rcRect, CreateSolidBrush(RGB(0, 255, 0)));//( HBRUSH )::GetStockObject(WHITE_BRUSH)
-					//rcRect.top = rcRect.bottom;
-					//rcRect.bottom = rc.top + (LONG)( ( rc.bottom - rc.top ) * ( i + 2 ) / _countof(m_iMonitors) );
 				}
 #pragma endregion
 #pragma region Draw Text

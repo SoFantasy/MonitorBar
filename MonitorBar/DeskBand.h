@@ -81,5 +81,6 @@ private:
 	HWND				m_hToolTip;
 	const UINT_PTR		nTIMER_ID;
 	HMENU				m_hMenu;
+	int mytest = 0;
 };
 

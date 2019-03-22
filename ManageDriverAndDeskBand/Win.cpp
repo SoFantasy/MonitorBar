@@ -356,7 +356,7 @@ HRESULT CWin::IsSystemInstallDriver(HWND hWnd)
 }
 
 void CWin::RegisterSwitch(HWND hWnd)
-{
+{	
 	HMODULE hDll = LoadLibrary(_T("MonitorBar.dll"));
 	if (!hDll)
 	{
