@@ -58,7 +58,7 @@ void CCpuUsage::Update( )
 	double usage = __GetCpuUsage(m_ullLastTime, m_ullLastIdleTime);
 	if (usage >= 0)
 	{
-		m_dCur = usage;
+		m_dCur = (int)usage;
 		if (m_dCur > m_dMax)m_dMax = m_dCur;
 		if (m_dCur < m_dMin)m_dMin = m_dCur;
 	}

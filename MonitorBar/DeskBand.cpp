@@ -140,7 +140,7 @@ STDMETHODIMP CDeskBand::GetBandInfo(DWORD dwBandID, DWORD, DESKBANDINFO *pdbi)
 		m_dwBandID = dwBandID;
 		if (pdbi->dwMask & DBIM_MINSIZE)
 		{
-			pdbi->ptMinSize.x = 70;
+			pdbi->ptMinSize.x = 64;
 			pdbi->ptMinSize.y = 30;
 		}
 		if (pdbi->dwMask & DBIM_MAXSIZE)
@@ -150,7 +150,7 @@ STDMETHODIMP CDeskBand::GetBandInfo(DWORD dwBandID, DWORD, DESKBANDINFO *pdbi)
 
 		if (pdbi->dwMask & DBIM_ACTUAL)
 		{
-			pdbi->ptActual.x = 70;
+			pdbi->ptActual.x = 64;
 			pdbi->ptActual.y = 30;
 		}
 		if (pdbi->dwMask & DBIM_TITLE)
@@ -314,7 +314,7 @@ LRESULT CDeskBand::__OnCreate(HWND hWnd)
 	SendMessage(m_hToolTip, TTM_ADDTOOL, 0, (LPARAM)&ti);
 	SendMessage(m_hToolTip, TTM_SETTITLE, TTI_NONE, (LPARAM)TEXT("详细信息"));
 	SendMessage(m_hToolTip, TTM_SETMAXTIPWIDTH, 0, SHRT_MAX);
-	SendMessage(m_hToolTip, TTM_SETDELAYTIME, TTDT_AUTOPOP, 10000);
+	//SendMessage(m_hToolTip, TTM_SETDELAYTIME, TTDT_AUTOPOP, 10000);
 	//SendMessage(m_hToolTip, TTM_SETDELAYTIME, TTDT_INITIAL, 1000);
 	m_hMenu = LoadMenu(g_hInst, MAKEINTRESOURCE(IDR_MENU_MAIN));
 	SetTimer(hWnd, nTIMER_ID, 1000, nullptr);
@@ -349,59 +349,55 @@ LRESULT CDeskBand::__OnPaint(HWND hWnd, HDC _hdc)
 			int nOldBkMode = ::SetBkMode(hdc, TRANSPARENT);
 			HGLOBAL hOldFont = nullptr;
 			if (m_hFont) hOldFont = ::SelectObject(hdc, m_hFont);
-			rc.top += 1;
-			RECT rcRect = { rc.left, rc.top, 0, rc.top + (rc.bottom - rc.top) / _countof(m_iMonitors) };
-			SIZE sz[_countof(m_iMonitors)] = { 0 };
-			LONG lWidth = 0;
-			std::wstring sout;
-			for (size_t i = 0; i < _countof(m_iMonitors); i++)
+			SIZE sz;
+			const auto& str = m_iMonitors[0]->ToString();
+			GetTextExtentPoint(hdc, str.c_str(), (int)str.length(), &sz);
+			LONG txtH = sz.cy;
+			LONG barH = (rc.bottom - rc.top) / (LONG)_countof(m_iMonitors);
+			LONG barW = rc.right - rc.left;
+			RECT rcRect = {
+				rc.left,
+				rc.top + barH - (barH - txtH) / 2,
+				rc.right,
+				rc.top + barH - (barH - txtH) / 2 + 1
+			};
+			RECT rcText =
 			{
-				if (!m_iMonitors[i])continue;
-				const auto& str = m_iMonitors[i]->ToString();
-				GetTextExtentPoint(hdc, str.c_str(), (int)str.length(), sz + i);
-				if (sz[i].cx > lWidth)lWidth = sz[i].cx;
-			}
+				rc.left + 4,
+				rc.top + (barH - txtH) / 2 + 1,
+				rc.right,
+				rc.top + barH - 1
+			};
+			std::wstring sout;
 			for (size_t i = 0; i < _countof(m_iMonitors); i++)
 			{
 				if (!m_iMonitors[i])
 				{
-					rcRect.top = rcRect.bottom;
-					rcRect.bottom = rc.top + (LONG)( ( rc.bottom - rc.top ) * ( i + 2 ) / _countof(m_iMonitors) );
 					continue;
 				}
-#pragma region Draw white rectangle
+
+				//画线
 				if (i < 2)
 				{
-					rcRect.left = rc.left;
-					rcRect.right = rc.left + (LONG)((rc.right - rc.left)*m_iMonitors[i]->GetValue() / 100.0);
-					rcRect.bottom = rc.top + (LONG)((rc.bottom - rc.top) * (i + 1) / _countof(m_iMonitors)) + 1;
-					rcRect.top = rcRect.bottom - 1;
-					FillRect(hdc, &rcRect, CreateSolidBrush(RGB(255, 0, 0)));//( HBRUSH )::GetStockObject(WHITE_BRUSH)
-					rcRect.left = rcRect.right;
 					rcRect.right = rc.right;
-					FillRect(hdc, &rcRect, CreateSolidBrush(RGB(0, 255, 0)));//( HBRUSH )::GetStockObject(WHITE_BRUSH)
+					FillRect(hdc, &rcRect, CreateSolidBrush(RGB(0, 255, 0)));//绿线
+					rcRect.right = rc.left + (LONG)(barW * m_iMonitors[i]->GetValue() / 100.0);
+					FillRect(hdc, &rcRect, CreateSolidBrush(RGB(255, 0, 0)));//红线
+					rcRect.top += barH;
+					rcRect.bottom += barH;
 				}
-#pragma endregion
-#pragma region Draw Text
+
+				//数据
 				const auto &str = m_iMonitors[i]->ToString();
-				sout += __ChangeString(m_iMonitors[i]->ToLongString()) + L"\n";
-				RECT rcText =
-				{
-					0,
-					rc.top + (LONG)((i << 1) + 1)* (rc.bottom - rc.top) / 6 - (sz[i].cy >> 1),
-					(rc.left + rc.right + lWidth) >> 1
-				};
-				rcText.top += i;
-				rcText.left = rcText.right - sz[i].cx;
-				rcText.bottom = rcText.top + sz[i].cy;
 				SetTextColor(hdc, RGB(255, 255, 255));
 				DrawText(hdc, str.c_str(), (int)str.length(), &rcText, 0);
+				rcText.top += barH;
+				rcText.bottom += barH;
 
-				//rcText.right = rcRect.right;
-				//SetTextColor(hdc, 0);
-				//DrawText(hdc, str.c_str(), (int)str.length(), &rcText, 0);
-#pragma endregion
+				//Tip数据
+				sout += __ChangeString(m_iMonitors[i]->ToLongString()) + L"\n";
 			}
+
 			TOOLINFOW ti = { sizeof(TOOLINFOW), 0, m_hWndParent, (UINT_PTR)hWnd };
 			ti.hinst = g_hInst;
 			ti.lpszText = (LPWSTR)sout.c_str();
