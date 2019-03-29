@@ -326,7 +326,11 @@ HRESULT CWin::IsRegister(HWND hWnd)
 	}
 	else
 	{
-		hr = func( );
+		try {
+			hr = func();
+		}
+		catch (...) { hr = -1; }
+
 		if (FAILED(hr))
 			Ehd(hWnd, "DllIsRegisterServer", hr);
 	}
@@ -378,7 +382,11 @@ void CWin::RegisterSwitch(HWND hWnd)
 		Ef(hWnd, "GetProcAddress");
 	else if (m_fRegister)
 	{
-		HRESULT hr = show(FALSE);
+		HRESULT hr;
+		try {
+			hr = show(FALSE);
+		}
+		catch (...) { hr = -1; }
 		if (FAILED(hr))
 			Ehd(hWnd, "DllShowMonitorBar", hr);
 		hr = func( );
@@ -405,7 +413,10 @@ void CWin::RegisterSwitch(HWND hWnd)
 			Ehd(hWnd, "DllRegisterServer", hr);
 		else
 		{
-			hr = show(TRUE);
+			try {
+				hr = show(TRUE);
+			}
+			catch (...) { hr = -1; }
 			if (FAILED(hr))
 				Ehd(hWnd, "DllShowMonitorBar", hr);
 		}
