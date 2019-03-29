@@ -314,7 +314,7 @@ LRESULT CDeskBand::__OnCreate(HWND hWnd)
 	SendMessage(m_hToolTip, TTM_ADDTOOL, 0, (LPARAM)&ti);
 	SendMessage(m_hToolTip, TTM_SETTITLE, TTI_NONE, (LPARAM)TEXT("详细信息"));
 	SendMessage(m_hToolTip, TTM_SETMAXTIPWIDTH, 0, SHRT_MAX);
-	SendMessage(m_hToolTip, TTM_SETDELAYTIME, TTDT_AUTOPOP, 10000);
+	//SendMessage(m_hToolTip, TTM_SETDELAYTIME, TTDT_AUTOPOP, 10000);
 	//SendMessage(m_hToolTip, TTM_SETDELAYTIME, TTDT_INITIAL, 1000);
 	m_hMenu = LoadMenu(g_hInst, MAKEINTRESOURCE(IDR_MENU_MAIN));
 	SetTimer(hWnd, nTIMER_ID, 1000, nullptr);
@@ -350,7 +350,7 @@ LRESULT CDeskBand::__OnPaint(HWND hWnd, HDC _hdc)
 			HGLOBAL hOldFont = nullptr;
 			if (m_hFont) hOldFont = ::SelectObject(hdc, m_hFont);
 			rc.top += 1;
-			RECT rcRect = { rc.left, rc.top, 0, rc.top + (rc.bottom - rc.top) / _countof(m_iMonitors) };
+			RECT rcRect = { rc.left, rc.top, 0, rc.top + (rc.bottom - rc.top) / (LONG)_countof(m_iMonitors) };
 			SIZE sz[_countof(m_iMonitors)] = { 0 };
 			LONG lWidth = 0;
 			std::wstring sout;
@@ -391,7 +391,7 @@ LRESULT CDeskBand::__OnPaint(HWND hWnd, HDC _hdc)
 					rc.top + (LONG)((i << 1) + 1)* (rc.bottom - rc.top) / 6 - (sz[i].cy >> 1),
 					(rc.left + rc.right + lWidth) >> 1
 				};
-				rcText.top += i;
+				rcText.top += (int)i;
 				rcText.left = rcText.right - sz[i].cx;
 				rcText.bottom = rcText.top + sz[i].cy;
 				SetTextColor(hdc, RGB(255, 255, 255));
