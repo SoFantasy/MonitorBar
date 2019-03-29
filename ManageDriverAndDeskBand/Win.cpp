@@ -22,7 +22,7 @@ void LogErr(const char*function, size_t line, const char*f, DWORD dw);
 
 CWin::CWin(HINSTANCE hInstance, int nCmdShow)
 : m_lpClassName(_T("ManageDriverAndDeskBand"))
-, m_lpWindowTitle(_T("监视栏管理器"))
+, m_lpWindowTitle(_T("监视栏管理器(WYD)"))
 , m_hRegister(nullptr)
 , m_hUnregister(nullptr)
 , m_hInstallSystemDriver(nullptr)

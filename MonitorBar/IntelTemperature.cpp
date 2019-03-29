@@ -144,63 +144,74 @@ STATUS_CODE CIntelTemperature::__Init( )
 
 STATUS_CODE CIntelTemperature::__ReadMsr(unsigned long index, KAFFINITY mask, unsigned long long* ret)const
 {
-	if (_GetDriverHandle( ) == INVALID_HANDLE_VALUE)
-		return STATUS_CODE::STATUS_CODE_UNKNOWN_ERROR;
-	if (!_GetIsMsr( ))
-		return STATUS_CODE::STATUS_CODE_UNKNOWN_ERROR;
-	if (!ret)
-		return STATUS_CODE::STATUS_CODE_INVALID_ARG;
-	DWORD				returnedLength = 0;
-	BOOL				result = FALSE;
-	HANDLE hThread = nullptr;
-	DWORD_PTR oldMask;
-	if (_GetIsNT( ))
+	try
 	{
-		hThread = GetCurrentThread( );
-		oldMask = SetThreadAffinityMask(hThread, mask);
-		if (!oldMask)
+		if (_GetDriverHandle() == INVALID_HANDLE_VALUE)
 			return STATUS_CODE::STATUS_CODE_UNKNOWN_ERROR;
-	}
-	result = DeviceIoControl(
-		_GetDriverHandle( ),
-		dwIOCTL_READ_MSR,
-		&index,
-		sizeof index,
-		ret,
-		sizeof *ret,
-		&returnedLength,
-		nullptr
+		if (!_GetIsMsr())
+			return STATUS_CODE::STATUS_CODE_UNKNOWN_ERROR;
+		if (!ret)
+			return STATUS_CODE::STATUS_CODE_INVALID_ARG;
+		DWORD				returnedLength = 0;
+		BOOL				result = FALSE;
+		HANDLE hThread = nullptr;
+		DWORD_PTR oldMask;
+		if (_GetIsNT())
+		{
+			hThread = GetCurrentThread();
+			oldMask = SetThreadAffinityMask(hThread, mask);
+			if (!oldMask)
+				return STATUS_CODE::STATUS_CODE_UNKNOWN_ERROR;
+		}
+		result = DeviceIoControl(
+			_GetDriverHandle(),
+			dwIOCTL_READ_MSR,
+			&index,
+			sizeof index,
+			ret,
+			sizeof *ret,
+			&returnedLength,
+			nullptr
 		);
-	if (_GetIsNT( ))
-		SetThreadAffinityMask(hThread, oldMask);
-	if (!result)
-		return STATUS_CODE::STATUS_CODE_UNKNOWN_ERROR;
-	return STATUS_CODE::STATUS_CODE_NO_ERROR;
+		if (_GetIsNT())
+			SetThreadAffinityMask(hThread, oldMask);
+		if (!result)
+			return STATUS_CODE::STATUS_CODE_UNKNOWN_ERROR;
+		return STATUS_CODE::STATUS_CODE_NO_ERROR;
+	}
+	catch (...) 
+	{ 
+		return STATUS_CODE::STATUS_CODE_UNKNOWN_ERROR; 
+	}
 }
 
 void CIntelTemperature::Update( )
 {
-	m_nAllTemp = 0;
-	m_dwNumOfAvailableProcesses = 0;
-	for (DWORD i = 0; i < GetCpuCoreCount( ); ++i)
+	try
 	{
-		unsigned long long val;
-		if (STATUS_CODE::STATUS_CODE_NO_ERROR != __ReadMsr(nIA32_THERM_STATUS_MSR, _GetMask(i), &val))
+		m_nAllTemp = 0;
+		m_dwNumOfAvailableProcesses = 0;
+		for (DWORD i = 0; i < GetCpuCoreCount(); ++i)
 		{
-			if (m_pEachCpuCoreTemp)
-				m_pEachCpuCoreTemp[i] = SHRT_MIN;
+			unsigned long long val;
+			if (STATUS_CODE::STATUS_CODE_NO_ERROR != __ReadMsr(nIA32_THERM_STATUS_MSR, _GetMask(i), &val))
+			{
+				if (m_pEachCpuCoreTemp)
+					m_pEachCpuCoreTemp[i] = SHRT_MIN;
+			}
+			else
+			{
+				short temp = (short)m_pTjMax[i] - (short)(val >> 16 & 0x7f);
+				if (m_pEachCpuCoreTemp)
+					m_pEachCpuCoreTemp[i] = temp;
+				m_nAllTemp += temp;
+				++m_dwNumOfAvailableProcesses;
+			}
 		}
-		else
-		{
-			short temp = (short)m_pTjMax[i] - (short)( val >> 16 & 0x7f );
-			if (m_pEachCpuCoreTemp)
-				m_pEachCpuCoreTemp[i] = temp;
-			m_nAllTemp += temp;
-			++m_dwNumOfAvailableProcesses;
-		}
+		if (m_dwNumOfAvailableProcesses)
+			m_sCur = short(m_nAllTemp / m_dwNumOfAvailableProcesses);
 	}
-	if (m_dwNumOfAvailableProcesses)
-		m_sCur = short(m_nAllTemp / m_dwNumOfAvailableProcesses);
+	catch (...) {}	
 }
 
 double CIntelTemperature::GetPercent( )const

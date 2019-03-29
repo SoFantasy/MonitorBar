@@ -331,81 +331,90 @@ LRESULT CDeskBand::__OnPaint(HWND hWnd, HDC _hdc)
 	else
 		GetClientRect(hWnd, &rc);
 
-	if (hdc)
+	try
 	{
-		if (m_bCanCompositionEnabled)
+		if (hdc)
 		{
-			HTHEME hTheme = OpenThemeData(nullptr, L"Button");
-			if (hTheme)
+			if (m_bCanCompositionEnabled)
 			{
-				HDC hdcPaint = nullptr;
-				HPAINTBUFFER hBufferPaint =
-					BeginBufferedPaint(hdc, &rc,
-						BP_BUFFERFORMAT::BPBF_TOPDOWNDIB, nullptr, &hdcPaint);
-				DrawThemeParentBackground(hWnd, hdcPaint, &rc);
-				EndBufferedPaint(hBufferPaint, TRUE);
-				CloseThemeData(hTheme);
-			}
-			int nOldBkMode = ::SetBkMode(hdc, TRANSPARENT);
-			HGLOBAL hOldFont = nullptr;
-			if (m_hFont) hOldFont = ::SelectObject(hdc, m_hFont);
-			SIZE sz;
-			const auto& str = m_iMonitors[0]->ToString();
-			GetTextExtentPoint(hdc, str.c_str(), (int)str.length(), &sz);
-			LONG txtH = sz.cy;
-			LONG barH = (rc.bottom - rc.top) / (LONG)_countof(m_iMonitors);
-			LONG barW = rc.right - rc.left;
-			RECT rcRect = {
-				rc.left,
-				rc.top + barH - (barH - txtH) / 2,
-				rc.right,
-				rc.top + barH - (barH - txtH) / 2 + 1
-			};
-			RECT rcText =
-			{
-				rc.left + 4,
-				rc.top + (barH - txtH) / 2 + 1,
-				rc.right,
-				rc.top + barH - 1
-			};
-			std::wstring sout;
-			for (size_t i = 0; i < _countof(m_iMonitors); i++)
-			{
-				if (!m_iMonitors[i])
+				HTHEME hTheme = OpenThemeData(nullptr, L"Button");
+				if (hTheme)
 				{
-					continue;
+					HDC hdcPaint = nullptr;
+					HPAINTBUFFER hBufferPaint =
+						BeginBufferedPaint(hdc, &rc,
+							BP_BUFFERFORMAT::BPBF_TOPDOWNDIB, nullptr, &hdcPaint);
+					DrawThemeParentBackground(hWnd, hdcPaint, &rc);
+					EndBufferedPaint(hBufferPaint, TRUE);
+					CloseThemeData(hTheme);
+				}
+				int nOldBkMode = ::SetBkMode(hdc, TRANSPARENT);
+				HGLOBAL hOldFont = nullptr;
+				if (m_hFont) hOldFont = ::SelectObject(hdc, m_hFont);
+				SIZE sz;
+				const auto &str = m_iMonitors[0]->ToString();
+				if (str.length() < 1) return 1;
+				GetTextExtentPoint(hdc, str.c_str(), (int)str.length(), &sz);
+				LONG barH = (rc.bottom - rc.top) / (LONG)_countof(m_iMonitors);
+				LONG barW = rc.right - rc.left;
+				LONG txtH = sz.cy > 0 && sz.cy < barH ? sz.cy : barH;
+				RECT rcRect = {
+					rc.left,
+					rc.top + barH - (barH - txtH) / 2,
+					rc.right,
+					rc.top + barH - (barH - txtH) / 2 + 1
+				};
+				RECT rcText =
+				{
+					rc.left + 4,
+					rc.top + (barH - txtH) / 2 + 1,
+					rc.right,
+					rc.top + barH - 1
+				};
+				std::wstring sout;
+				for (size_t i = 0; i < _countof(m_iMonitors); i++)
+				{
+					if (!m_iMonitors[i])
+					{
+						continue;
+					}
+
+					//画线
+					if (i < 2)
+					{
+						rcRect.right = rc.right;
+						FillRect(hdc, &rcRect, CreateSolidBrush(RGB(0, 255, 0)));//绿线
+						rcRect.right = rc.left + (LONG)(barW * m_iMonitors[i]->GetValue() / 100.0);
+						if (rcRect.right < rc.left) rcRect.right = rc.right;
+						if (rcRect.right > rc.right) rcRect.right = rc.right;
+						FillRect(hdc, &rcRect, CreateSolidBrush(RGB(255, 0, 0)));//红线
+						rcRect.top += barH;
+						rcRect.bottom += barH;
+					}
+
+					//数据
+					const auto &str = m_iMonitors[i]->ToString();
+					if (str.length() < 1) continue;
+					SetTextColor(hdc, RGB(255, 255, 255));
+					DrawText(hdc, str.c_str(), (int)str.length(), &rcText, 0);
+					rcText.top += barH;
+					rcText.bottom += barH;
+
+					//Tip数据
+					sout += __ChangeString(m_iMonitors[i]->ToLongString()) + L"\n";
 				}
 
-				//画线
-				if (i < 2)
-				{
-					rcRect.right = rc.right;
-					FillRect(hdc, &rcRect, CreateSolidBrush(RGB(0, 255, 0)));//绿线
-					rcRect.right = rc.left + (LONG)(barW * m_iMonitors[i]->GetValue() / 100.0);
-					FillRect(hdc, &rcRect, CreateSolidBrush(RGB(255, 0, 0)));//红线
-					rcRect.top += barH;
-					rcRect.bottom += barH;
-				}
-
-				//数据
-				const auto &str = m_iMonitors[i]->ToString();
-				SetTextColor(hdc, RGB(255, 255, 255));
-				DrawText(hdc, str.c_str(), (int)str.length(), &rcText, 0);
-				rcText.top += barH;
-				rcText.bottom += barH;
-
-				//Tip数据
-				sout += __ChangeString(m_iMonitors[i]->ToLongString()) + L"\n";
+				TOOLINFOW ti = { sizeof(TOOLINFOW), 0, m_hWndParent, (UINT_PTR)hWnd };
+				ti.hinst = g_hInst;
+				ti.lpszText = (LPWSTR)sout.c_str();
+				SendMessageW(m_hToolTip, TTM_UPDATETIPTEXTW, 0, (LPARAM)&ti);
+				if (m_hFont) ::SelectObject(hdc, hOldFont);
+				::SetBkMode(hdc, nOldBkMode);
 			}
-
-			TOOLINFOW ti = { sizeof(TOOLINFOW), 0, m_hWndParent, (UINT_PTR)hWnd };
-			ti.hinst = g_hInst;
-			ti.lpszText = (LPWSTR)sout.c_str();
-			SendMessageW(m_hToolTip, TTM_UPDATETIPTEXTW, 0, (LPARAM)&ti);
-			if (m_hFont) ::SelectObject(hdc, hOldFont);
-			::SetBkMode(hdc, nOldBkMode);
 		}
 	}
+	catch (...) {}
+
 	if (!_hdc)
 		EndPaint(hWnd, &paint);
 	return 0;
@@ -437,16 +446,20 @@ LRESULT CDeskBand::__OnDestroy(HWND hWnd)
 
 LRESULT CDeskBand::__OnTimer(HWND hWnd)
 {
-	for (size_t i = 0; i < _countof(m_iMonitors); ++i)
+	try
 	{
-		if (!m_iMonitors[i])
-			__Init(i);
-		else
-			m_iMonitors[i]->Update();
+		for (size_t i = 0; i < _countof(m_iMonitors); ++i)
+		{
+			if (!m_iMonitors[i])
+				__Init(i);
+			else
+				m_iMonitors[i]->Update();
+		}
+		HDC hdc = GetDC(hWnd);
+		__OnPaint(hWnd, hdc);
+		ReleaseDC(hWnd, hdc);
 	}
-	HDC hdc = GetDC(hWnd);
-	__OnPaint(hWnd, hdc);
-	ReleaseDC(hWnd, hdc);
+	catch (...) {}	
 	return 0;
 }
 

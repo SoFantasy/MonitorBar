@@ -17,8 +17,7 @@ ULONG g_lDllRef = 0;
 
 const wchar_t szAppName[] = L"Monitor Bar";
 
-// {91A35994-A0A6-4B8E-AEC5-BE6E1D93834D}
-CLSID CLSID_DeskBand = { 0x91a35994, 0xa0a6, 0x4b8e, 0xae, 0xc5, 0xbe, 0x6e, 0x1d, 0x93, 0x83, 0x4d };
+CLSID CLSID_DeskBand = { 0xDD496BEF, 0xAA80, 0x4F5E, 0x8f, 0x1d, 0x19, 0x74, 0x09, 0x29, 0x20, 0x19};
 
 BOOL APIENTRY DllMain(HINSTANCE hInst, DWORD dwReason, LPVOID)
 {
@@ -204,8 +203,8 @@ STDAPI DllShowMonitorBar(BOOL fShowOrHide)
 	{
 		if (TRUE == fShowOrHide)
 		{
-			WCHAR *pBuf = new WCHAR[49];       //很配存储文字串的空间
-			StringFromGUID2(CLSID_DeskBand, pBuf, 39);
+			WCHAR *pBuf = new WCHAR[128];       //很配存储文字串的空间
+			StringFromGUID2(CLSID_DeskBand, pBuf, 64);
 			if (!GlobalFindAtom(pBuf))
 				GlobalAddAtom(pBuf);
 			// Beware! SHLoadInProc is not implemented under Vista and higher.
