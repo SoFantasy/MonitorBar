@@ -140,7 +140,7 @@ STDMETHODIMP CDeskBand::GetBandInfo(DWORD dwBandID, DWORD, DESKBANDINFO *pdbi)
 		m_dwBandID = dwBandID;
 		if (pdbi->dwMask & DBIM_MINSIZE)
 		{
-			pdbi->ptMinSize.x = 64;
+			pdbi->ptMinSize.x = 80;
 			pdbi->ptMinSize.y = 30;
 		}
 		if (pdbi->dwMask & DBIM_MAXSIZE)
@@ -150,7 +150,7 @@ STDMETHODIMP CDeskBand::GetBandInfo(DWORD dwBandID, DWORD, DESKBANDINFO *pdbi)
 
 		if (pdbi->dwMask & DBIM_ACTUAL)
 		{
-			pdbi->ptActual.x = 64;
+			pdbi->ptActual.x = 80;
 			pdbi->ptActual.y = 30;
 		}
 		if (pdbi->dwMask & DBIM_TITLE)
@@ -360,15 +360,16 @@ LRESULT CDeskBand::__OnPaint(HWND hWnd, HDC _hdc)
 				LONG txtH = sz.cy > 0 && sz.cy < barH ? sz.cy : barH;
 				RECT rcRect = {
 					rc.left,
-					rc.top + barH - (barH - txtH) / 2,
-					rc.right,
-					rc.top + barH - (barH - txtH) / 2 + 1
+					rc.top + 2,
+					rc.left + 4,
+					rc.bottom - 2
 				};
+				LONG rcH = rcRect.bottom - rcRect.top;
 				RECT rcText =
 				{
-					rc.left + 4,
+					rc.left + 8,
 					rc.top + (barH - txtH) / 2 + 1,
-					rc.right,
+					rc.right - 8,
 					rc.top + barH - 1
 				};
 				std::wstring sout;
@@ -379,17 +380,26 @@ LRESULT CDeskBand::__OnPaint(HWND hWnd, HDC _hdc)
 						continue;
 					}
 
-					//画线
-					if (i < 2)
+					//CPU使用率
+					if (i == 0)
 					{
-						rcRect.right = rc.right;
-						FillRect(hdc, &rcRect, CreateSolidBrush(RGB(0, 255, 0)));//绿线
-						rcRect.right = rc.left + (LONG)(barW * m_iMonitors[i]->GetValue() / 100.0);
-						if (rcRect.right < rc.left) rcRect.right = rc.right;
-						if (rcRect.right > rc.right) rcRect.right = rc.right;
-						FillRect(hdc, &rcRect, CreateSolidBrush(RGB(255, 0, 0)));//红线
-						rcRect.top += barH;
-						rcRect.bottom += barH;
+						HBRUSH hbr = CreateSolidBrush(RGB(0, 255, 0));
+						if(hbr != NULL) FillRect(hdc, &rcRect, hbr);//绿线
+						rcRect.top = rc.bottom - 2 - (LONG)ceil(rcH * m_iMonitors[i]->GetValue() / 100.0);
+						hbr = CreateSolidBrush(RGB(255, 0, 0));
+						if (hbr != NULL) FillRect(hdc, &rcRect, hbr);//红线
+					}
+					//内存使用率
+					if (i == 1)
+					{
+						rcRect.top = rc.top + 2;
+						rcRect.left += barW - 8;
+						rcRect.right += barW - 8;
+						HBRUSH hbr = CreateSolidBrush(RGB(0, 255, 0));
+						if (hbr != NULL) FillRect(hdc, &rcRect, hbr);//绿线
+						rcRect.top = rc.bottom - 2 - (LONG)ceil(rcH * m_iMonitors[i]->GetValue() / 100.0);
+						hbr = CreateSolidBrush(RGB(255, 0, 0));
+						if (hbr != NULL) FillRect(hdc, &rcRect, hbr);//红线
 					}
 
 					//数据
@@ -459,7 +469,7 @@ LRESULT CDeskBand::__OnTimer(HWND hWnd)
 		__OnPaint(hWnd, hdc);
 		ReleaseDC(hWnd, hdc);
 	}
-	catch (...) {}	
+	catch (...) {}
 	return 0;
 }
 
