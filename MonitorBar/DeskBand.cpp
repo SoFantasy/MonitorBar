@@ -384,10 +384,10 @@ LRESULT CDeskBand::__OnPaint(HWND hWnd, HDC _hdc)
 					if (i == 0)
 					{
 						rcRect.top = rc.bottom - 2 - (LONG)ceil(rcH * m_iMonitors[i]->GetValue() / 100.0);
-						FillRect(hdc, &rcRect, CreateSolidBrush(RGB(255, 0, 0)));//红线
+						FillRect(hdc, &rcRect, (HBRUSH)::GetStockObject(WHITE_BRUSH));//红线
 						rcRect.bottom = rcRect.top - 1;
-						rcRect.top = rc.top + 2;
-						if(rcRect.top < rcRect.bottom) FillRect(hdc, &rcRect, CreateSolidBrush(RGB(0, 255, 0)));//绿线
+						//rcRect.top = rc.top + 2;
+						//if(rcRect.top < rcRect.bottom) FillRect(hdc, &rcRect, CreateSolidBrush(RGB(0, 255, 0)));//绿线
 					}
 					//内存使用率
 					if (i == 1)
@@ -397,10 +397,10 @@ LRESULT CDeskBand::__OnPaint(HWND hWnd, HDC _hdc)
 						rcRect.right += barW - 8;
 						rcRect.bottom = rc.bottom - 2;
 						rcRect.top = rc.bottom - 2 - (LONG)ceil(rcH * m_iMonitors[i]->GetValue() / 100.0);
-						FillRect(hdc, &rcRect, CreateSolidBrush(RGB(255, 0, 0)));//红线
-						rcRect.bottom = rcRect.top - 1;
-						rcRect.top = rc.top + 2;
-						if (rcRect.top < rcRect.bottom) FillRect(hdc, &rcRect, CreateSolidBrush(RGB(0, 255, 0)));//绿线
+						FillRect(hdc, &rcRect, (HBRUSH)::GetStockObject(WHITE_BRUSH));//红线
+						//rcRect.bottom = rcRect.top - 1;
+						//rcRect.top = rc.top + 2;
+						//if (rcRect.top < rcRect.bottom) FillRect(hdc, &rcRect, CreateSolidBrush(RGB(0, 255, 0)));//绿线
 					}
 					
 					//数据
