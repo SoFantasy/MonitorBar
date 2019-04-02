@@ -82,5 +82,7 @@ private:
 	const UINT_PTR		nTIMER_ID;
 	HMENU				m_hMenu;
 	int mytest = 0;
+	HBRUSH hbrUsed;
+	HBRUSH hbrTotal;
 };
 
